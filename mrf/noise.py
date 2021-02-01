@@ -6,6 +6,7 @@ import gray
 
 
 def make_noise(img, seed=0, rate=0.01):
+  result = np.copy(img)
   if seed is not None:
     np.random.seed(seed)
   if len(img.shape) == 3:
@@ -19,8 +20,8 @@ def make_noise(img, seed=0, rate=0.01):
       yy = y[z//w, z%w]
       rch = np.random.randint(3)
       val = np.random.randint(255)
-      img[xx, yy, rch] = val
-    return img
+      result[xx, yy, rch] = val
+    return result
   else :
     h, w = img.shape
     x = np.tile(range(h), w).reshape(w, h).T
@@ -31,8 +32,8 @@ def make_noise(img, seed=0, rate=0.01):
       xx = x[z//w, z%w]
       yy = y[z//w, z%w]
       val = np.random.randint(255)
-      img[xx, yy] = val
-    return img
+      result[xx, yy] = val
+    return result
 
 def test_make_noise(img):
   img_g = gray.BGR2GRAY(img)

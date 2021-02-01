@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 
 
-def BGR2GRAY(img):
+def BGR2GRAY(src):
+  img = np.copy(src)
   if len(img.shape) == 3:
     return (img[:,:,0] * 0.0722 + img[:,:,1]*0.7152 + img[:,:,2]*0.2126).astype(np.uint8)
   else:

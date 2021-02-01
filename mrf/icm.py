@@ -9,7 +9,16 @@ from gray import BGR2GRAY
 from quantization import binarization
 from noise import make_noise
 
-
+'''
+ ICMによる二値画像のノイズ除去を実施します。
+  コンストラクタ
+    @param img_bin:ノイズ画像, [-1, 1]で二値化
+    @eta : tlinkの係数. 元画像と同じ値を取るときに低いエネルギーとなる
+    @h : 画素値に対して一様に作用する係数.
+    @beta : nlinkの係数. 周辺画素と同じ時に低いエネルギーとなる
+  計算 exec_icm()
+  結果の取得 get_dstimage()
+'''
 class MRF_ICM:
   def __init__(self, img_bin, eta=2.1, h=0, beta=1):
     self.src = img_bin
@@ -21,23 +30,9 @@ class MRF_ICM:
     self.beta = beta
     self.energy = 0
     self.max_phase = 10000
-
-  def calc_energy(self, img):
-    e = 0
-    img4 = self.make_arround4(img)
-    e -= self.beta * np.sum(img*img4[:,:,0])
-    e -= self.beta * np.sum(img*img4[:,:,1])
-    e -= self.beta * np.sum(img*img4[:,:,2])
-    e -= self.beta * np.sum(img*img4[:,:,3])
-    e += self.h * np.sum(img)
-    e -= self.eta * np.sum(img * self.src)
-    return e
   
-  def get_dstimage(self):
-    return self.dst[1:self.H+1, 1:self.W+1]
-  
+  # ICMの実行
   def exec_icm(self):
-    # 1点の反転を行うと、対象点+周辺4点のエネルギーが変更になるだけ
     x = np.tile(range(self.H), self.W).reshape(self.H, self.W).T.reshape(-1)
     y = np.tile(range(self.W), self.H)
     rnum = self.H * self.W
@@ -54,6 +49,7 @@ class MRF_ICM:
         print('p:', p, ' break.')
         break
   
+  # ICMの内部関数
   # energyが減少する場合、ラベルを反転させます
   def change_1px(self, x, y):
     vx = self.dst[x+1, y+1]
@@ -74,6 +70,18 @@ class MRF_ICM:
       has_change = True
     return has_change
 
+  # 検算用に画像全体のエネルギーを計算
+  def calc_energy(self, img):
+    e = 0
+    img4 = self.make_arround4(img)
+    e -= self.beta * np.sum(img*img4[:,:,0])
+    e -= self.beta * np.sum(img*img4[:,:,1])
+    e -= self.beta * np.sum(img*img4[:,:,2])
+    e -= self.beta * np.sum(img*img4[:,:,3])
+    e += self.h * np.sum(img)
+    e -= self.eta * np.sum(img * self.src)
+    return e
+
   def make_arround4(self, img):
     h, w = img.shape
     res = np.zeros((h, w, 4))
@@ -82,6 +90,11 @@ class MRF_ICM:
     res[  :  , 1:  ,2] = img[:  ,:-1]
     res[  :-1,  :  ,3] = img[1: ,:]
     return res
+
+  # 計算結果画像の取得
+  def get_dstimage(self):
+    return self.dst[1:self.H+1, 1:self.W+1]
+
 
 # [0,1]bin画像を [-1, +1]に変換します。  
 def change_bin11(img):
